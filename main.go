@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -22,8 +23,23 @@ func main() {
 
 	portString := os.Getenv("PORT")
 	if portString == "" {
-		log.Fatal("Port in not found")
+		log.Fatal("Port in not found in the environment")
 	}
+
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL in not found in the environment")
+	}
+
+	conn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("can't connect to the db", err)
+	}
+
+	apiCfg := apiConfig{
+		DB: database.New(conn),
+	}
+
 	router := chi.NewRouter()
 
 	router.Use(cors.Handler(cors.Options{
@@ -38,6 +54,8 @@ func main() {
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlerReadiness)
 	v1Router.Get("/err", handlerErr)
+	v1Router.Post("/users", apiCfg.handlerCreateUser)
+
 	router.Mount("/v1", v1Router)
 
 	srv := &http.Server{
@@ -46,7 +64,7 @@ func main() {
 	}
 
 	log.Printf("server starting on port %v", portString)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
