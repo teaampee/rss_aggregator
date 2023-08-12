@@ -10,7 +10,7 @@ import (
 	"github.com/teaampee/rssagg/internal/database"
 )
 
-func (apiCfg apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Name string `json:"name"`
 	}
@@ -35,5 +35,9 @@ func (apiCfg apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	respondWithJSON(w, 201, databaseUserToUser(user))
+}
+
+func (apiCfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
 	respondWithJSON(w, 200, databaseUserToUser(user))
 }
